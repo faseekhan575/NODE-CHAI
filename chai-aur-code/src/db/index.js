@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 import { DB_NAME } from "../constants.js";
 
 
@@ -12,7 +11,7 @@ import { DB_NAME } from "../constants.js";
             console.log(`\n Connected to the MongoDB :${mongoose_DB_connect.connection.host}\n`);
         } catch (error) {
          console.log(error);
-         
+         error.message='Failed to connect to MongoDB';
          process.exit(1); 
         }
     
