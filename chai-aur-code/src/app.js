@@ -23,4 +23,11 @@ app.use(express.urlencoded({
 app.use(express.static("public"))
 
 
+//import routers
+import Routers from './routes/user.router.js';
+
+app.use("./User",Routers)
+
+
+
 export default app
