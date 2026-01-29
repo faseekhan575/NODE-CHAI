@@ -73,8 +73,6 @@ UserSchema.methods.genratetokens=async function (){
        {
            expiresIn:process.env.ACESS_TOKEN_EXPIRE
        }
-    
-    
     )
 }
 
@@ -87,7 +85,6 @@ UserSchema.methods.genratetokens=async function (){
        {
            expiresIn:process.env.REFRESH_TOKEN_EXPIRE
        }
-    
     
     )
 }
