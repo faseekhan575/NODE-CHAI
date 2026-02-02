@@ -29,5 +29,9 @@ import Routers from './routes/user.router.js';
 app.use("/api/v1/user",Routers)
 
 
+//mine partice
+app.use("/api/v2/product",Routers)
+
+
 
 export default app
