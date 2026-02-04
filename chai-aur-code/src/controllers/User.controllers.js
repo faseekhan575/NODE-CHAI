@@ -1,23 +1,27 @@
 import { asynchandler } from "../utils/asynchandler.js";
 import {ApiError} from "../utils/ApiErrors.js"
-import uplodeImage from "../models/cloudniary.js";
-import {User} from "../models/user.models.js"
+import User from "../models/user.models.js"
 import ApiResponse from "../utils/Api_Respoonse.js";
+import uplodeImage from "../models/cloudniary.js";
 
 const registerUser = asynchandler(async (req, res) => {
-    const { username, fullname, email } = req.body
-    
-    if (!username || !fullname || !email) {
-        res.status(201).json({
-            message: "plz firts enter data to continue"
-        })
-    }
-    else {
-        res.status.json({
-            message: "username fullname and email added sucesfully plz continue"
-        })
-    }
+   const { username, fullname, email, passward } = req.body;
 
+  
+
+
+    console.log("req.files:", req.files);
+console.log("req.body:", req.body);
+
+
+if (!username || !fullname || !email) {
+    return res.status(400).json({
+        message: "Please fill all required fields"
+    });
+}
+  
+     // not AI finding user if already login with same email or username using $or oprater its 
+     // a mongoose method
     const findinguser = await User.findOne({
         $or: [{ username }, { email }]
     });
@@ -25,8 +29,10 @@ const registerUser = asynchandler(async (req, res) => {
      if (findinguser){
        throw new ApiError(409, "User with this email already exists")
      }
+
+
      const avatarPath = req.files?.avatar?.[0]?.path;
-     const coverPath = req.files?.coverimage?.[0]?.path;
+     const coverPath = req.files?.coverImages?.[0]?.path;
 
 
       if (!avatarPath || !coverPath){
@@ -40,14 +46,15 @@ const registerUser = asynchandler(async (req, res) => {
          if (!avatar || !coverIamges){
         throw new ApiError(400,"plz first uplode avatar file")
       }
-
+           
      const users= await User.create({
         fullname,
         avatar:avatar.url,
-        coverimages:coverIamges.url,
+        coverImages:coverIamges.url,
         email,
-        password,
+        passward,
        username, 
+        tokens:0
       })
 
       const createuser= await User.findById(User._id).select(

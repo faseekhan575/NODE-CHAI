@@ -1,1 +1,1 @@
-export const  DB_NAME = 'FASEEH_KHAN_DB';
+export const  DB_NAME = 'faseeh_khan_DB'

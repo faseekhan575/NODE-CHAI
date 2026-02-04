@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 import bycrypt from "bcrypt"
-import { JsonWebTokenError } from "jsonwebtoken";
+// import { JsonWebTokenError } from "jsonwebtoken";
 
 const UserSchema= new mongoose.Schema({
          username:{
             type: String,
             required:true,
-            uppercase:false,
+            uppercase:false, 
             trim:true,
             index:true,
          },
@@ -27,11 +27,12 @@ const UserSchema= new mongoose.Schema({
             required:true,
          },
          coverimage:{
-            type:string,  //cloudnery url
+          type: String
+  //cloudnery url
 
          },
          passward:{
-            type:string,
+            type:String,
             required:[true,"plz enter you password first"]
          },
          tokens:{
@@ -53,7 +54,7 @@ const UserSchema= new mongoose.Schema({
 
 UserSchema.pre("save" ,async function (next) {
     if (!this.isModified("password")) return next();
-    this.passward=bycrypt.hash(this.passward,"10")
+    this.passward=await bycrypt.hash(this.passward,"10")
     next()
 })
 
@@ -89,4 +90,5 @@ UserSchema.methods.genratetokens=async function (){
     )
 }
 
-export default User=mongoose.model("User",UserSchema)
+const User = mongoose.model("User", UserSchema)
+export default User

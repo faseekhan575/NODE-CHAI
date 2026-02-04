@@ -11,14 +11,14 @@ app.use(cros({
 }))
 
 app.use(express.json({
-    limit: "20kb"
+    limit: "100kb"
 }))
 
 app.use(cookieParser())
 
 app.use(express.urlencoded({
     extended: true,
-    limit: "20kb"
+    limit: "100kb"
 }))
 app.use(express.static("public"))
 

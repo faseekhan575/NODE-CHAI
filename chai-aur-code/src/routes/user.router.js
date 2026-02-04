@@ -10,16 +10,10 @@ const Routers = Router();
 
 
 Routers.route("/Register").post(
-     upload.fields([
-        {
-            name:"avatar",
-            maxCount:1
-        }
-        ,{
-            name:"coverimage",
-            maxCount:1
-        }
-     ])
+   upload.fields([
+  { name: "avatar", maxCount: 1 },
+  { name: "coverImages", maxCount: 1 } // plural
+])
     
     
     ,registerUser)
