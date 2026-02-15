@@ -26,7 +26,7 @@ const UserSchema= new mongoose.Schema({
               type: String,
             required:true,
          },
-         coverimage:{
+         coverImages:{
           type: String
   //cloudnery url
 
@@ -53,9 +53,10 @@ const UserSchema= new mongoose.Schema({
 })
 
 UserSchema.pre("save" ,async function (next) {
-    if (!this.isModified("password")) return next();
-    this.passward=await bycrypt.hash(this.passward,"10")
-    next()
+   if (!this.isModified("passward")) ;
+this.passward = await bycrypt.hash(this.passward, 10);
+
+
 })
 
 UserSchema.methods.isPasswordCorrect = async function (passward) {
@@ -63,9 +64,9 @@ UserSchema.methods.isPasswordCorrect = async function (passward) {
 }
 
 
-UserSchema.methods.genratetokens=async function (){
+UserSchema.methods.generateAccessToken=async function (){
    return await jwt.sign({
-           id:this._id,
+           _id:this._id,
            username:this.username,
            email:this.email,
            fullname:this.fullname,
@@ -77,7 +78,7 @@ UserSchema.methods.genratetokens=async function (){
     )
 }
 
-UserSchema.methods.genratetokens=async function (){
+UserSchema.methods.generateRefreshToken=async function (){
    return await jwt.sign({
            id:this._id,
            
