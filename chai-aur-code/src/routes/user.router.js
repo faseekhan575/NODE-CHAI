@@ -1,10 +1,12 @@
 import { Router } from "express";
-import registerUser, { LoginUser, LogoutUser } from "../controllers/User.controllers.js"
+import registerUser, { LoginUser, LogoutUser, } from "../controllers/User.controllers.js"
 import { upload } from "../middlewares/multer.middelware.js";
+import { generateRefreshToken } from "../controllers/User.controllers.js";
 
 //mine partice
 import { createproduct } from "../controllers/User.controllers.js";
 import jwtSecret from "../middlewares/auth.middelware.js";
+
 
 const Routers = Router();
 
@@ -19,9 +21,10 @@ Routers.route("/Register").post(
     
     ,registerUser)
 
-Router.route("/Login").post(LoginUser)
+Routers.route("/Login").post(LoginUser)
 
-Router.route("logout").post(jwtSecret,LogoutUser)
+Routers.route("/logout").post(jwtSecret,LogoutUser)
+Routers.route("/refresh-token").post(generateRefreshToken)
 
 
 

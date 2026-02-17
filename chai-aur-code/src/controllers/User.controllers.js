@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiErrors.js"
 import User from "../models/user.models.js"
 import ApiResponse from "../utils/Api_Respoonse.js";
 import uplodeImage from "../models/cloudniary.js";
+import jwt from "jsonwebtoken"
 
 const registerUser = asynchandler(async (req, res) => {
     const { username, fullname, email, passward } = req.body;
@@ -82,8 +83,8 @@ const registerUser = asynchandler(async (req, res) => {
 const  GenrateAccessandRefershToken=async(UserId)=>{
    try {
         const user=await User.findById(UserId)
-        const accesstoken=user.generateAccessToken()
-        const refreshtoken=user.generateRefreshToken()
+        const accesstoken= user.generateAccessToken()
+        const refreshtoken= user.generateRefreshToken()
 
         user.refreshtoken=refreshtoken
         await user.save({validateBeforeSave:false})
@@ -102,14 +103,14 @@ const LoginUser=asynchandler(async(req,res)=>{
 
     const {username,email,passward}=req.body
       
-    if (!username || !email){
+    if (!(username || email) || !passward){
         res.status(401).json({
             message:"plz enter user name and email to continue first"
         })
     }
 
-    const checkUser=User.findOne({
-        $or:[{username},{passward}]
+    const checkUser=await User.findOne({
+        $or:[{username},{email}]
     })
 
     if (!checkUser){
@@ -118,7 +119,7 @@ const LoginUser=asynchandler(async(req,res)=>{
         })
     }
       
-    const passwardValidation=User.isPasswordCorrect(passward)
+    const passwardValidation=await checkUser.isPasswordCorrect(passward)
 
     if (!passwardValidation){
           res.status(401).json({
@@ -126,49 +127,52 @@ const LoginUser=asynchandler(async(req,res)=>{
         })
     }
 
-    const {accesstoken,refreshtoken}= GenrateAccessandRefershToken(User._id)
+    const {accesstoken,refreshtoken}=await GenrateAccessandRefershToken(checkUser._id)
 
-    const LoggedinUser= await User.findById(User._id).select(
-        "-passward","-tokens"
+    const LoggedinUser= await User.findById(checkUser._id).select(
+        "-passward -tokens"
     )
-
-    const options={
-        httpOnly:true,
-        secure:true,
-
-    }
+ 
+      
+   const options = {
+    httpOnly: false,
+    secure: false,  // must be false for local/dev
+    sameSite: "lax"
+};
     return res.
     status(200)
     .cookie("accesstoken",accesstoken,options)
     .cookie("refreshtoken",refreshtoken,options)
     .json (new ApiResponse(200,{
-        user:LoginUser,accesstoken,refreshtoken
+        user: LoggedinUser,accesstoken,refreshtoken
     },"user logged in sucesfully"
 
 ))
 })
+const LogoutUser = asynchandler(async (req, res) => {
+    // Clear refresh token in DB
+    await User.findByIdAndUpdate(req.user._id, {
+        $set: { refreshtoken: null }
+    }, { new: true });
+
+const options = {
+    httpOnly: false,
+    secure: false,  // must be false in local/dev
+    sameSite: "lax"
+};
 
 
-const LogoutUser=asynchandler(async(req,res)=>{
-            User.findByIdAndUpdate(req.user._id,{
-               $set:{
-                refreshtoken:null,
-               }
-            },[
-                new true,
-            ])
 
-            const options={
-        httpOnly:true,
-        secure:true,
-
-    }
     return res
-    .status(200)
-    .clearcookie("acesstoken",options)
-    .clearcookie("refreshtoken",options)
-     
-})
+        .status(200)
+        .clearCookie("accesstoken", options)
+          .clearCookie("refreshtoken", options)
+        .json({
+            success: true,
+            message: "User logged out successfully"
+        });
+});
+
 
 
 ///mine partice
@@ -187,6 +191,56 @@ export const createproduct = asynchandler(async (req, res) => {
 
 })
 
+export const generateRefreshToken=asynchandler(async(res,req)=>{
+
+     const genratingrefreshtoken = req.cookie.refreshtoken || req.body.refreshtoken
+
+     if (!genratingrefreshtoken){
+        throw new ApiError(401,"unathroized user acess")
+     }
+
+     const verifyrefreshtoken = jwt.verify(genratingrefreshtoken,process.env.REFRESH_TOKEN)
+
+     if (!verifyrefreshtoken){
+         throw new ApiError(401,"unmatched token")
+     }
+      
+     const finduser=User.findById(verifyrefreshtoken._id)
+
+     if (!finduser){
+        throw new ApiError(401,"user not found")
+     }
+
+     if (verifyrefreshtoken!=User?.tokens){
+         throw new ApiError(401,"token you use is expired")
+     }
+
+     const options={
+        httpsOnly:true,
+        secure: false,
+     }
+
+     const {accesstoken,refreshtoken}=await GenrateAccessandRefershToken(User._id)
+
+     return res
+      .cookie("accesstoken",accesstoken,options)
+    .cookie("refreshtoken",refreshtoken,options)
+    .json(
+        new ApiResponse(
+            200,{
+                accesstoken,
+                refreshtoken
+            },"refresh token done..."
+        )
+    )
+
+     
+
+
+
+
+})
+
 
 //video 14 work
 
@@ -195,5 +249,6 @@ export default registerUser;
 export {LoginUser}
 export {GenrateAccessandRefershToken}
 export {LogoutUser}
+export {generateRefreshToken}
 
 

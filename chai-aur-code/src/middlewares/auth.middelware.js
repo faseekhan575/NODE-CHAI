@@ -1,33 +1,39 @@
-import { ApiError } from "../utils/ApiErrors";
-import { asynchandler } from "../utils/asynchandler";
-import { JsonWebTokenError as jwt} from "jsonwebtoken";
-import User from "../models/user.models";
+import jwt from "jsonwebtoken";
+import User from "../models/user.models.js";
 
-
-const jwtSecret=asynchandler(async(req,res,next)=>{
+const jwtSecret = async (req, res, next) => {
   try {
-     const token=req.cookies?.accesstoken || req.header("Authorization")?.replace("bearer ","")
+    // Get token from cookies OR Authorization header
+    let token = req.cookies?.accesstoken;
 
-   if (!token){
-    throw new ApiError(401,"unauthroized request")
-   }
-   
-   const decodedToken=jwt.verify(token,process.env.ACCESS_TOKEN)
+    if (!token && req.header("Authorization")) {
+      const authHeader = req.header("Authorization").trim();
+      if (authHeader.startsWith("Bearer ")) {
+        token = authHeader.replace("Bearer ", "");
+      }
+    }
 
-    const user= await User.findById(decodedToken?._id).select(
-       "-password -tokens"
-     )
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Unauthorized request: no token provided" });
+    }
 
-     if (!user){
-        throw new ApiError(401,"invalid acess token")
-     } 
-     req.user=user;
-     next()
+    // Verify token
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN);
+
+    // Find user (use correct field names from your schema)
+    const user = await User.findById(decodedToken._id).select("-passward -tokens");
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Unauthorized request: invalid token" });
+    }
+
+    // Attach user to request
+    req.user = user;
+    next();
   } catch (error) {
-    throw new ApiError(401,"unauthroized request")
+    console.error("JWT Error:", error.message);
+    return res.status(401).json({ success: false, message: "Unauthorized request: token invalid or expired" });
   }
-
-
-})
+};
 
 export default jwtSecret;
