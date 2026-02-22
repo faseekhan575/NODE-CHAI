@@ -23,6 +23,7 @@ const registerUser = asynchandler(async (req, res) => {
 
     // not AI finding user if already login with same email or username using $or oprater its 
     // a mongoose method
+
     const findinguser = await User.findOne({
         $or: [{ username }, { email }]
     });
@@ -242,6 +243,118 @@ export const generateRefreshToken=asynchandler(async(res,req)=>{
 })
 
 
+export const resetpassward=asynchandler(async(res,req)=>{
+    const {oldapassward,newpassward,conform_passward}=req.body
+
+    const finduser=await User.findById(req.user?.id)
+    const checkpassward=await User.isPasswordCorrect(oldapassward)
+
+    if (!checkpassward){
+        throw ApiError(400,"INVALID OLD PASSWARDS")
+    }
+
+    if (!(newpassward===conform_passward)){
+        throw ApiError(400,"newpassward and confrompassward doesnt match")
+    }
+
+    return res.status(200)
+    .json(new ApiResponse (200,{},"passward changed sucessfully"))
+
+     
+})
+
+export const getcurrentuser=asynchandler(async(req,res)=>{
+     return res.status(200)
+     .json(200,req.user,"current user fetched sucessfully")
+})
+
+const Updateemailandnameandfullname = asynchandler(async (req, res) => {
+    const { username, email, fullname } = req.body;
+
+    if (!(username || email || fullname)) {
+        throw new ApiError(400, "Please provide username, email, or fullname to update");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                username,
+                email,
+                fullname,
+            },
+        },
+        { new: true }
+    );
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    res.status(200).json(user);
+});
+
+
+const updateprofilepicture=asynchandler(async(req,res)=>{
+      const avatar= req.file?.avatar
+
+      if (!avatar){
+        throw new ApiError(400,"the avatar file is not found")
+      }
+
+      const uplodedavatar=uplodeImage(avatar)
+
+      if (uplodedavatar){
+        throw new ApiError(400,"failed to uplode the image on coludinary")
+      }
+
+      const saveingimage=User.findByIdAndUpdate(req.user._id
+        ,{
+            set:{
+               avatar:avatar.url
+            }
+        },
+        {
+            new:true,
+        }
+      ).select("-passward")
+
+      if (!saveingimage){
+        throw new ApiError(400,"there is an error while updating avatar iamge")
+      }    
+})
+
+   const updatecoverimage=asynchandler(async(req,res)=>{
+      const coverimage=req.file?.coverIamges
+
+      if (!coverimage){
+         throw new ApiError(400,"the coverimage file is not found")
+      }
+
+      const coverimageuplode=uplodeImage(coverimage)
+
+      if (!coverimageuplode){
+         throw new ApiError(400,"the coverimage file is uploded on cloudninary")
+      }
+
+      const savingcoverimage=User.findByIdAndUpdate(req.user._id
+        ,{
+            set:{
+                coverImages:coverimage.url
+            }
+        },{new:true}.select("-passward")
+      ).status(200).json({
+        message:"cover image updated sucessfully"
+      })
+
+       if (!savingcoverimage){
+        throw new ApiError(400,"there is an error while updating COVERIMAGE iamge")
+      }   
+
+   })
+
+
+
 //video 14 work
 
 
@@ -250,5 +363,10 @@ export {LoginUser}
 export {GenrateAccessandRefershToken}
 export {LogoutUser}
 export {generateRefreshToken}
+export {getcurrentuser}
+export {resetpassward}
+export {Updateemailandnameandfullname}
+export {updateprofilepicture}
+export {updatecoverimage}
 
 
