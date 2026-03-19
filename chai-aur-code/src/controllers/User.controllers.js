@@ -4,11 +4,10 @@ import User from "../models/user.models.js"
 import ApiResponse from "../utils/Api_Respoonse.js";
 import uplodeImage from "../models/cloudniary.js";
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose";
 
 const registerUser = asynchandler(async (req, res) => {
     const { username, fullname, email, passward } = req.body;
-
-
 
 
     console.log("req.files:", req.files);
@@ -243,7 +242,7 @@ export const generateRefreshToken=asynchandler(async(res,req)=>{
 })
 
 
-export const resetpassward=asynchandler(async(res,req)=>{
+export const resetpasswardss=asynchandler(async(res,req)=>{
     const {oldapassward,newpassward,conform_passward}=req.body
 
     const finduser=await User.findById(req.user?.id)
@@ -353,8 +352,121 @@ const updateprofilepicture=asynchandler(async(req,res)=>{
 
    })
 
+   export const getuserchannalprofile=asynchandler(async(req,res)=>{
+          const {username}=req.params
 
+          if (!username?.trim()){
+            throw new ApiError(400,"username is missing")
 
+          }
+
+          const channel=await User.aggregate([
+            {
+                $match:{
+                    username:username?.toLowerCase()
+                }
+            },{
+                $lookup:{
+                    from:"subscription",
+                    localFeild:"_id",
+                    foreginFeild:"channel",
+                    as:"subscribers"
+                }
+            },{
+                $lookup:{
+                    from:"subscription",
+                    localField:"_id",
+                    foreignField:"subscriber",
+                    as:"subcribedTO"
+                }
+            },{
+                $addFields:{
+                    subcriberscount:{
+                        $size:"$subscribers"
+                    },
+                    channelSubcribedtocount:{
+                        $size:"subcribedTO"
+                    },
+                    issubcsribed:{
+                        $cond:{
+                            if:{$in:[req.user?._id,"$subscribers.subscriber"]},
+                            than:true,
+                            else:false,
+                        }
+                    }
+                }
+            },{
+                $project:{
+                    fullname:1,
+                    username:1,
+                    subcriberscount:1,
+                    channelSubcribedtocount:1,
+                    avatar:1,
+                     coverImages:1,
+                    email:1,
+                }
+            }
+          ])
+
+          if (!channel?.length){
+              throw new ApiError(404,"channel does not exits")
+          }
+          return res.status(200)
+          .json(
+            new ApiResponse(200,channel[0],"user channal fetched sucessfully")
+          )
+   })
+    
+   //my partice work.... 
+   export const get_watchedhistory=asynchandler(async(req,res)=>{
+               const user= await User.aggregate([
+                {
+                   $match:{
+                    _id: new mongoose.Types.ObjectId(req.user._id)
+                   }
+                },
+                {
+                    $lookup:{
+                        from:"videos",
+                        localField:"watchedhistory",
+                        foreignField:"_id",
+                       as:"watcheshistory",
+                       pipeline:[
+                        {
+                            $lookup:{
+                                from:"User",
+                                localField:"owner",
+                                foreignField:"_id",
+                                as:"owner",
+                                pipeline:[
+                                    {
+                                        $project:{
+                                            fullname:1,
+                                            username:1,
+                                            avatar:1,
+                                        }
+                                    }
+                                ]
+                            }
+                        },{
+                           $addFields:{
+                            owner:{
+                                $first:"$owner"
+                            }
+                           } 
+                        }
+                       ]
+                    }
+                }
+               ])
+               return res.status(200)
+               .json(
+                new ApiResponse(200,user[0].watchhistory,"watched history get sucesfully")
+               )
+   })
+
+  
+  
 //video 14 work
 
 
@@ -362,9 +474,6 @@ export default registerUser;
 export {LoginUser}
 export {GenrateAccessandRefershToken}
 export {LogoutUser}
-export {generateRefreshToken}
-export {getcurrentuser}
-export {resetpassward}
 export {Updateemailandnameandfullname}
 export {updateprofilepicture}
 export {updatecoverimage}

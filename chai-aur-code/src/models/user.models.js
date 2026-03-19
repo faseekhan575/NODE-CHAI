@@ -40,10 +40,10 @@ const UserSchema= new mongoose.Schema({
             type:Number,
             required:true,
          },
-         watchhistory:{
-            type:mongoose.Schema.ObjectId,
-            ref:"Video"
-         }
+        watchistory:[{
+   type: mongoose.Schema.Types.ObjectId,
+   ref: "Video"
+}]
 
 
          
