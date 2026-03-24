@@ -22,15 +22,24 @@ Routers.route("/Register").post(
     ,registerUser)
 
 Routers.route("/Login").post(LoginUser)
+
 Routers.route("/logout").post(jwtSecret,LogoutUser)
+
 Routers.route("/refresh-token").post(generateRefreshToken)
-Router.route("/change-passward").post(jwtSecret,resetpasswardss)
-Router.route("/current-user").get(jwtSecret,getcurrentuser)
-Router.route("/update-account").patch(jwtSecret,Updateemailandnameandfullname)
-Router.route("/avatar").patch(jwtSecret,upload.single("/avatar"),updateprofilepicture)
-Router.route("coverimage").patch(jwtSecret,upload.single("coverimage"),updatecoverimage)
-Router.route("/c/:username").get(jwtSecret,getuserchannalprofile)
-Router.route("/history").get(jwtSecret,get_watchedhistory)
+
+Routers.route("/change-passward").post(jwtSecret,resetpasswardss)
+
+Routers.route("/current-user").get(jwtSecret,getcurrentuser)
+
+Routers.route("/update-account").patch(jwtSecret,Updateemailandnameandfullname)
+
+Routers.route("/avatar").patch(jwtSecret,upload.single("avatar"),updateprofilepicture)
+
+Routers.route("/coverimage").patch(jwtSecret,upload.single("coverImage"),updatecoverimage)
+
+Routers.route("/c/:username").get(jwtSecret,getuserchannalprofile)
+
+Routers.route("/history").get(jwtSecret,get_watchedhistory)
 
 
 

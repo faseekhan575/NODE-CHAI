@@ -129,6 +129,12 @@ const LoginUser=asynchandler(async(req,res)=>{
 
     const {accesstoken,refreshtoken}=await GenrateAccessandRefershToken(checkUser._id)
 
+    checkUser.tokens = checkUser.tokens 
+    ? [...checkUser.tokens, refreshtoken] 
+    : [refreshtoken]
+
+await checkUser.save()
+
     const LoggedinUser= await User.findById(checkUser._id).select(
         "-passward -tokens"
     )
@@ -191,9 +197,10 @@ export const createproduct = asynchandler(async (req, res) => {
 
 })
 
-export const generateRefreshToken=asynchandler(async(res,req)=>{
 
-     const genratingrefreshtoken = req.cookie.refreshtoken || req.body.refreshtoken
+export const generateRefreshToken=asynchandler(async(req,res)=>{
+
+     const genratingrefreshtoken = req.cookies?.refreshtoken || req.body.refreshtoken
 
      if (!genratingrefreshtoken){
         throw new ApiError(401,"unathroized user acess")
@@ -205,22 +212,22 @@ export const generateRefreshToken=asynchandler(async(res,req)=>{
          throw new ApiError(401,"unmatched token")
      }
       
-     const finduser=User.findById(verifyrefreshtoken._id)
+     const finduser=await User.findById(verifyrefreshtoken._id)
 
      if (!finduser){
         throw new ApiError(401,"user not found")
      }
 
-     if (verifyrefreshtoken!=User?.tokens){
+    if (!finduser.tokens.includes(genratingrefreshtoken)){
          throw new ApiError(401,"token you use is expired")
      }
 
      const options={
-        httpsOnly:true,
+        httpOnly:true,
         secure: false,
      }
 
-     const {accesstoken,refreshtoken}=await GenrateAccessandRefershToken(User._id)
+     const {accesstoken,refreshtoken}=await GenrateAccessandRefershToken(finduser._id)
 
      return res
       .cookie("accesstoken",accesstoken,options)
@@ -242,11 +249,11 @@ export const generateRefreshToken=asynchandler(async(res,req)=>{
 })
 
 
-export const resetpasswardss=asynchandler(async(res,req)=>{
+export const resetpasswardss=asynchandler(async(req,res)=>{
     const {oldapassward,newpassward,conform_passward}=req.body
 
-    const finduser=await User.findById(req.user?.id)
-    const checkpassward=await User.isPasswordCorrect(oldapassward)
+    const finduser=await User.findById(req.user?._id)
+    const checkpassward=await finduser.isPasswordCorrect(oldapassward)
 
     if (!checkpassward){
         throw ApiError(400,"INVALID OLD PASSWARDS")
@@ -255,6 +262,9 @@ export const resetpasswardss=asynchandler(async(res,req)=>{
     if (!(newpassward===conform_passward)){
         throw ApiError(400,"newpassward and confrompassward doesnt match")
     }
+       // ✅ actually save the new password
+    finduser.passward = newpassward
+    await finduser.save({ validateBeforeSave: false })
 
     return res.status(200)
     .json(new ApiResponse (200,{},"passward changed sucessfully"))
@@ -264,8 +274,9 @@ export const resetpasswardss=asynchandler(async(res,req)=>{
 
 export const getcurrentuser=asynchandler(async(req,res)=>{
      return res.status(200)
-     .json(200,req.user,"current user fetched sucessfully")
+     .json(new ApiResponse(200,req.user,"current user fetched sucessfully"))
 })
+
 
 const Updateemailandnameandfullname = asynchandler(async (req, res) => {
     const { username, email, fullname } = req.body;
@@ -294,23 +305,25 @@ const Updateemailandnameandfullname = asynchandler(async (req, res) => {
 });
 
 
+
+
 const updateprofilepicture=asynchandler(async(req,res)=>{
-      const avatar= req.file?.avatar
+      const avatar= req.file
 
       if (!avatar){
         throw new ApiError(400,"the avatar file is not found")
       }
 
-      const uplodedavatar=uplodeImage(avatar)
+      const uplodedavatar=await uplodeImage(avatar.path)
 
-      if (uplodedavatar){
+      if (!uplodedavatar){
         throw new ApiError(400,"failed to uplode the image on coludinary")
       }
 
-      const saveingimage=User.findByIdAndUpdate(req.user._id
+      const saveingimage=await User.findByIdAndUpdate(req.user._id
         ,{
-            set:{
-               avatar:avatar.url
+            $set:{
+               avatar:uplodedavatar.url
             }
         },
         {
@@ -321,36 +334,48 @@ const updateprofilepicture=asynchandler(async(req,res)=>{
       if (!saveingimage){
         throw new ApiError(400,"there is an error while updating avatar iamge")
       }    
+
+      return res.status(200)
+      .json(new ApiResponse(200,saveingimage,"avatar updated sucessfully"))
 })
 
-   const updatecoverimage=asynchandler(async(req,res)=>{
-      const coverimage=req.file?.coverIamges
 
-      if (!coverimage){
-         throw new ApiError(400,"the coverimage file is not found")
-      }
 
-      const coverimageuplode=uplodeImage(coverimage)
+  const updatecoverimage = asynchandler(async(req, res) => {
+    const coverimage = req.file
 
-      if (!coverimageuplode){
-         throw new ApiError(400,"the coverimage file is uploded on cloudninary")
-      }
+    if (!coverimage) {
+        throw new ApiError(400, "coverimage file is not found")
+    }
 
-      const savingcoverimage=User.findByIdAndUpdate(req.user._id
-        ,{
-            set:{
-                coverImages:coverimage.url
+    const coverimageuplode = await uplodeImage(coverimage.path)
+
+    if (!coverimageuplode) {
+        throw new ApiError(400, "failed to upload image to cloudinary")
+    }
+
+    // ✅ .select() chained correctly outside the options {}
+    const savingcoverimage = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                coverImages: coverimageuplode.url
             }
-        },{new:true}.select("-passward")
-      ).status(200).json({
-        message:"cover image updated sucessfully"
-      })
+        },
+        { new: true }
+    ).select("-passward")
 
-       if (!savingcoverimage){
-        throw new ApiError(400,"there is an error while updating COVERIMAGE iamge")
-      }   
+    if (!savingcoverimage) {
+        throw new ApiError(400, "error while updating cover image")
+    }
 
-   })
+    // ✅ moved res.json here, outside and after the DB call
+    return res.status(200).json(
+        new ApiResponse(200, savingcoverimage, "cover image updated successfully")
+    )
+})
+
+
 
    export const getuserchannalprofile=asynchandler(async(req,res)=>{
           const {username}=req.params
@@ -366,15 +391,16 @@ const updateprofilepicture=asynchandler(async(req,res)=>{
                     username:username?.toLowerCase()
                 }
             },{
-                $lookup:{
-                    from:"subscription",
-                    localFeild:"_id",
-                    foreginFeild:"channel",
-                    as:"subscribers"
-                }
+                // ✅ Correct spelling
+$lookup:{
+    from:"subscriptions",
+    localField:"_id",        // ← Field not Feild
+    foreignField:"channel",  // ← foreign not foregin
+    as:"subscribers"
+}
             },{
                 $lookup:{
-                    from:"subscription",
+                    from:"subscriptions",
                     localField:"_id",
                     foreignField:"subscriber",
                     as:"subcribedTO"
@@ -385,12 +411,12 @@ const updateprofilepicture=asynchandler(async(req,res)=>{
                         $size:"$subscribers"
                     },
                     channelSubcribedtocount:{
-                        $size:"subcribedTO"
+                        $size:"$subcribedTO"
                     },
                     issubcsribed:{
                         $cond:{
                             if:{$in:[req.user?._id,"$subscribers.subscriber"]},
-                            than:true,
+                            then:true,
                             else:false,
                         }
                     }

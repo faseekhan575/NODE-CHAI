@@ -36,10 +36,10 @@ const UserSchema= new mongoose.Schema({
             type:String,
             required:[true,"plz enter you password first"]
          },
-         tokens:{
-            type:Number,
-            required:true,
-         },
+        tokens: {
+    type: [String],
+    default: []
+},
         watchistory:[{
    type: mongoose.Schema.Types.ObjectId,
    ref: "Video"
