@@ -10,7 +10,7 @@ const likesschema=new mongoose.Schema({
                {
                  type: mongoose.Schema.Types.ObjectId,
                  ref: "Video",
-                 required: true
+                 
                },
                  likeby:{
                       type:mongoose.Schema.Types.ObjectId,
@@ -20,7 +20,7 @@ const likesschema=new mongoose.Schema({
                    tweet:{
                      type:mongoose.Schema.Types.ObjectId,
                       ref:"tweet",
-                      required:true,
+                     
                    }
 },{
     timestamps:true,

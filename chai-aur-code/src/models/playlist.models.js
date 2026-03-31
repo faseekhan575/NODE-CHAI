@@ -15,7 +15,6 @@ const playlist= new mongoose.Schema({
   {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Video",
-    required: true
   }
 ],
     owner:{
@@ -31,4 +30,4 @@ const playlist= new mongoose.Schema({
 
 
 
-export const video= mongoose.model('video',playlist)
+export const playlists= mongoose.model('playlists',playlist)
