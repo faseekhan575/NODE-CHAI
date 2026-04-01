@@ -17,7 +17,7 @@ Routers.route("/Register").post(
   { name: "avatar", maxCount: 1 },
   { name: "coverImages", maxCount: 1 } // plural
 ])
-    
+     
     
     ,registerUser)
 
@@ -40,6 +40,9 @@ Routers.route("/coverimage").patch(jwtSecret,upload.single("coverImage"),updatec
 Routers.route("/c/:username").get(jwtSecret,getuserchannalprofile)
 
 Routers.route("/history").get(jwtSecret,get_watchedhistory)
+
+
+
 
 
 

@@ -5,9 +5,6 @@ import { ApiError } from "../utils/ApiErrors";
 import { asynchandler } from "../utils/asynchandler";
 
 
-
-
-
        const getallvideos=asynchandler(async(req,res)=>{
         const { page = 1, limit = 10, query, sortBy="createdAt", sortType="desc", userId } = req.query
 
@@ -78,7 +75,7 @@ import { asynchandler } from "../utils/asynchandler";
               })
 
               if (!publish){
-    return res.status(400).json(new ApiResponse(400,"error while publishing a video"))
+    return res.status(400).json(new ApiError(400,"error while publishing a video"))
        }
        else{
          return res.status(200).json(new ApiResponse(200,publish,"videouploded"))
@@ -87,20 +84,15 @@ import { asynchandler } from "../utils/asynchandler";
 
        })
 
-
-
-
        const getvideobyid=asynchandler(async(req,res)=>{
           const {videoid}=req.params
 
           const getvideo=await Video.findById(
             videoid
-          ).select(
-            "videofile"
           )
 
            if (!getvideo){
-    return res.status(400).json(new ApiResponse(400,"error while getting a video"))
+    return res.status(400).json(new ApiError(400,"error while getting a video"))
        }
        else{
          return res.status(200).json(new ApiResponse(200,getvideo,"video fetched"))
@@ -108,7 +100,6 @@ import { asynchandler } from "../utils/asynchandler";
 
           
        })
-
 
        const updatedetails=asynchandler(async(req,res)=>{
          //TODO: update video details like title, description, thumbnail
@@ -137,7 +128,7 @@ import { asynchandler } from "../utils/asynchandler";
                     $set:{
                         title:title,
                         description:description,
-                        thumbnail:cloudnarythamial,
+                        thumbnail:cloudnarythamial.url,
                     }
                 },{
                     new:true
@@ -152,7 +143,6 @@ import { asynchandler } from "../utils/asynchandler";
        } 
        })
 
-
        const deletevideo=asynchandler(async(req,res)=>{
         const {videoid}=req.params
 
@@ -161,12 +151,47 @@ import { asynchandler } from "../utils/asynchandler";
         )
 
         if (!deletevideo){  
-    return res.status(400).json(new ApiResponse(400,"error while deleting a video"))
+    return res.status(400).json(new ApiError(400,"error while deleting a video"))
        }
        else{
          return res.status(200).json(new ApiResponse(200,deletevideo,"video deleted"))
        }        
-    })
+        })
 
-    
-    
+    const togglepublish=asynchandler(async(req,res)=>{
+        const {videoid}=req.params
+
+        const videouplode=await Video.findById(
+            videoid
+        )
+
+        if (videouplode){
+            const videoresponse=  await Video.findByIdAndUpdate(
+                videouplode._id,{
+                    $set:{
+                        isPublished: !videouplode.isPublished 
+                    }},{
+                        new:true
+                    }
+              )
+             if (videoresponse){
+                return res.status(200).json(new ApiResponse(200,videoresponse,"video has been publised"))
+             }
+              else{
+            return res.status(400).json(new ApiError(400,"error while video has been publised"))
+        }
+        }
+        else{
+            return res.status(400).json(new ApiError(400,"video not found"))
+        }
+       
+        })
+
+   export{
+    getallvideos,
+    publishvideo,
+    getvideobyid,
+    updatedetails,
+    deletevideo,
+    togglepublish
+   }

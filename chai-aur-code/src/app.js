@@ -1,11 +1,11 @@
 import express from 'express';
-import cros from 'cors'
+import cors from 'cors'
 import cookieParser from 'cookie-parser'
 
 
 const app = express();
 
-app.use(cros({
+app.use(cors({
     origin: process.env.ORIGIN,
     credentials: true
 }))
@@ -28,9 +28,9 @@ import Routers from './routes/user.router.js';
 
 app.use("/api/v1/user",Routers)
 
+app.use("/api/v2/Video",Routers)
 
-//mine partice
-app.use("/api/v2/product",Routers)
+app.use("/api/v3/playlist",Routers)
 
 
 
