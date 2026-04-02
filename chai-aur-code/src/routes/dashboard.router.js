@@ -1,16 +1,16 @@
-import { Router, Router } from "express";
+import { Router} from "express";
 
-import { upload } from "../middlewares/multer.middelware";
+import { upload } from "../middlewares/multer.middelware.js";
 
-import jwtSecret from "../middlewares/auth.middelware";
-import { getallchannalstats, getallvideosuploded } from "../controllers/dashboard.contoller";
-
-
-    const Routers=Router()
+import jwtSecret from "../middlewares/auth.middelware.js";
+import { getallchannalstats, getallvideosuploded } from "../controllers/dashboard.contoller.js";
 
 
-Routers.route("/getallchannelstats").get(jwtSecret,getallchannalstats)
+    const dashRouters=Router()
 
-Routers.route("/getallvideouplode").get(getallvideosuploded)
 
-export default Routers
+dashRouters.route("/getallchannelstats").get(jwtSecret,getallchannalstats)
+
+dashRouters.route("/getallvideouplode").get(jwtSecret,getallvideosuploded)
+
+export default dashRouters

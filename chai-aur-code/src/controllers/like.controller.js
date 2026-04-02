@@ -1,7 +1,7 @@
 import { comment } from "postcss";
-import { likes } from "../models/likes.model";
-import ApiResponse from "../utils/Api_Respoonse";
-import { asynchandler } from "../utils/asynchandler";
+import { likes } from "../models/likes.model.js";
+import ApiResponse from "../utils/Api_Respoonse.js";
+import { asynchandler } from "../utils/asynchandler.js";
 
 
 

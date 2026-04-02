@@ -1,19 +1,19 @@
 import { Router } from "express";
 
-import { upload } from "../middlewares/multer.middelware";
+import { upload } from "../middlewares/multer.middelware.js";
 
-import jwtSecret from "../middlewares/auth.middelware";
-import { getsubcribedchannels, getuserchannalsubcribers, togglesubcription } from "../controllers/subcription.controllers";
-import { getuserchannalprofile } from "../controllers/User.controllers";
-
-const Routers = Router()
+import jwtSecret from "../middlewares/auth.middelware.js";
+import { getsubcribedchannels, getuserchannalsubcribers, togglesubcription } from "../controllers/subcription.controllers.js";
 
 
+const subRouters = Router()
 
-Routers.route("/toggle/:channalid").post(jwtSecret,togglesubcription)
 
-Routers.route("/getchannalsubcribers/:channalid").get(getuserchannalsubcribers)
 
-Routers.route("/getsubcribedchananl/:subscribeID").get(jwtSecret,getsubcribedchannels)
+subRouters.route("/toggle/:channalid").post(jwtSecret,togglesubcription)
 
-export default Routers
+subRouters.route("/getchannalsubcribers/:channalid").get(getuserchannalsubcribers)
+
+subRouters.route("/getsubcribedchananl/:subscribeID").get(jwtSecret,getsubcribedchannels)
+
+export default subRouters

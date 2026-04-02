@@ -1,8 +1,8 @@
-import uplodeImage from "../models/cloudniary";
-import { Video } from "../models/video.models";
-import ApiResponse from "../utils/Api_Respoonse";
-import { ApiError } from "../utils/ApiErrors";
-import { asynchandler } from "../utils/asynchandler";
+import uplodeImage from "../models/cloudniary.js";
+import { Video } from "../models/video.models.js";
+import ApiResponse from "../utils/Api_Respoonse.js";
+import { ApiError } from "../utils/ApiErrors.js";
+import { asynchandler } from "../utils/asynchandler.js";
 
 
        const getallvideos=asynchandler(async(req,res)=>{
@@ -42,47 +42,58 @@ import { asynchandler } from "../utils/asynchandler";
        } 
        })
 
-       const publishvideo=asynchandler(async(req,res)=>{
-             const user=req.user._id
-              const { title, description} = req.body
+     const publishvideo = asynchandler(async (req, res) => {
+    try {
+        // Get authenticated user ID
+        const user = req.user?._id;
+        if (!user) {
+            return res.status(401).json(new ApiError(401, "Unauthorized: user not found"));
+        }
 
-              if (!(title && description)){
-                 return res.status(400).json(new ApiError(400,"plz enter required feilds"))
-              }
+        // Destructure request body
+        const { title, description } = req.body;
+        if (!title || !description) {
+            return res.status(400).json(new ApiError(400, "Please enter all required fields"));
+        }
 
-              const videofiles=req.files?.videofile?.[0]?.path
-              const thumbnailfiles=req.files?.thumbnail?.[0]?.path
+        // Get uploaded files
+        const videofiles = req.files?.videofile?.[0]?.path;
+        const thumbnailfiles = req.files?.thumbnail?.[0]?.path;
 
-              if (!(videofiles && thumbnailfiles)){
-                 return res.status(400).json(new ApiError(400,"plz uplode video first"))
-              }
+        if (!videofiles || !thumbnailfiles) {
+            return res.status(400).json(new ApiError(400, "Please upload both video and thumbnail files"));
+        }
 
-              const videuplode=await uplodeImage(videofiles)
-                const thumbnailuplode=await uplodeImage(thumbnailfiles)
+        // Upload files to Cloudinary
+        const videuplode = await uplodeImage(videofiles);
+        const thumbnailuplode = await uplodeImage(thumbnailfiles);
 
-              if (!(videuplode &&thumbnailuplode)){
-                 return res.status(400).json(new ApiError(400,"failed to uplode video on cloudninary plz uplode video again"))
-              }
+        if (!videuplode || !thumbnailuplode) {
+            return res.status(500).json(new ApiError(500, "Failed to upload files to Cloudinary. Please try again"));
+        }
 
-              const publish= await Video.create({
-                     owner:user,
-                     title:title,
-                     description:description,
-                     videofile:videuplode.url,
-                     thumbnail:thumbnailuplode.url,
-                     duration: videuplode.duration
+        // Create video record in database
+        const publish = await Video.create({
+            owner: user,
+            title: title,
+            description: description,
+            videofile: videuplode.url,
+            thumbnail: thumbnailuplode.url,
+            duration: videuplode.duration
+        });
 
-              })
+        if (!publish) {
+            return res.status(500).json(new ApiError(500, "Error while publishing the video"));
+        }
 
-              if (!publish){
-    return res.status(400).json(new ApiError(400,"error while publishing a video"))
-       }
-       else{
-         return res.status(200).json(new ApiResponse(200,publish,"videouploded"))
-       } 
+        // Success response
+        return res.status(200).json(new ApiResponse(200, publish, "Video uploaded successfully"));
 
-
-       })
+    } catch (error) {
+        // Catch-all error handler
+        return res.status(500).json(new ApiError(500, "Server error", error.message));
+    }
+});
 
        const getvideobyid=asynchandler(async(req,res)=>{
           const {videoid}=req.params
@@ -100,6 +111,7 @@ import { asynchandler } from "../utils/asynchandler";
 
           
        })
+
 
        const updatedetails=asynchandler(async(req,res)=>{
          //TODO: update video details like title, description, thumbnail
@@ -142,6 +154,7 @@ import { asynchandler } from "../utils/asynchandler";
          return res.status(200).json(new ApiResponse(200,updating,"deatils updated"))
        } 
        })
+       
 
        const deletevideo=asynchandler(async(req,res)=>{
         const {videoid}=req.params

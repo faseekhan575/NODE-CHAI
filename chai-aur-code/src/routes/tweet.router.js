@@ -1,19 +1,19 @@
 import { Router } from "express";
 
-import { upload } from "../middlewares/multer.middelware";
+import { upload } from "../middlewares/multer.middelware.js";
 
-import jwtSecret from "../middlewares/auth.middelware";
-import { createtweet, deletetweet, getusertweet, updatetweet } from "../controllers/tweet.contollers";
+import jwtSecret from "../middlewares/auth.middelware.js";
+import { createtweet, deletetweet, getusertweet, updatetweet } from "../controllers/tweet.contollers.js";
 
 
-const Routers = Router()
+const tweetRouters = Router()
 
-Routers.route("/createtweet").post(jwtSecret,createtweet)
+tweetRouters.route("/createtweet").post(jwtSecret,createtweet)
 
-Routers.route("/getusertweet").get(getusertweet)
+tweetRouters.route("/getusertweet").get(jwtSecret,getusertweet)
 
-Routers.route("/updatetweet/tweetid/:tweetid").patch(jwtSecret,updatetweet)
+tweetRouters.route("/updatetweet/tweetid/:tweetid").patch(jwtSecret,updatetweet)
 
-Routers.route("/deletetweet/tweetid/:tweetid").delete(jwtSecret,deletetweet)
+tweetRouters.route("/deletetweet/tweetid/:tweetid").delete(jwtSecret,deletetweet)
 
-export default Routers
+export default tweetRouters

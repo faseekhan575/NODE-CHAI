@@ -1,7 +1,7 @@
-import { comment } from "../models/comments.models";
-import { asynchandler } from "../utils/asynchandler";
-import ApiResponse from "../utils/Api_Respoonse";
-import { ApiError } from "../utils/ApiErrors";
+import { comment } from "../models/comments.models.js";
+import { asynchandler } from "../utils/asynchandler.js";
+import ApiResponse from "../utils/Api_Respoonse.js";
+import { ApiError } from "../utils/ApiErrors.js";
 
 const getallvideocomments=asynchandler(async(req,res)=>{
         const {videoId} = req.params
@@ -83,7 +83,7 @@ const deleteacomment=asynchandler(async(req,res)=>{
         return res.status(404).json(new ApiError(404,"server issue failed to update comment"))
     }
     else{
-         return res.status(200).json(new ApiResponse(200,deleteacomment,"comment has been updated sucesfully "))
+         return res.status(200).json(new ApiResponse(200,deleteacomment,"comment has been deleted sucesfully "))
     }
 
 })

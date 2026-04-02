@@ -1,20 +1,20 @@
-import { Router, Router } from "express";
+import { Router} from "express";
 
-import { upload } from "../middlewares/multer.middelware";
+import { upload } from "../middlewares/multer.middelware.js";
 
-import jwtSecret from "../middlewares/auth.middelware";
-import { addacomment, deleteacomment, getallvideocomments, updateacomment } from "../controllers/comment.controllers";
+import jwtSecret from "../middlewares/auth.middelware.js";
+import { addacomment, deleteacomment, getallvideocomments, updateacomment } from "../controllers/comment.controllers.js";
 
-const Routers=Router()
+const commentRouters=Router()
 
-Routers.use(jwtSecret)
+commentRouters.use(jwtSecret)
 
-Routers.route("/getallvideocomments/v/:videoId").get(getallvideocomments)
+commentRouters.route("/getallvideocomments/v/:videoId").get(getallvideocomments)
 
-Routers.route("/addacomment/v/:videoId").post(addacomment)
+commentRouters.route("/addacomment/v/:videoId").post(addacomment)
 
-Routers.route("/updatecomment/c/:commentId").patch(updateacomment)
+commentRouters.route("/updatecomment/c/:commentId").patch(updateacomment)
 
-Routers.route("/deletecomemnt/c/:commentId").delete(deleteacomment)
+commentRouters.route("/deletecomemnt/c/:commentId").delete(deleteacomment)
 
-export default Routers
+export default commentRouters

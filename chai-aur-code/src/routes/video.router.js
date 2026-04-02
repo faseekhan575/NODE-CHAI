@@ -1,28 +1,35 @@
 import { Router } from "express";
 
-import { upload } from "../middlewares/multer.middelware";
+import { upload } from "../middlewares/multer.middelware.js";
 
-import jwtSecret from "../middlewares/auth.middelware";
-import { deletevideo, getallvideos, getvideobyid, publishvideo, togglepublish, updatedetails } from "../controllers/video.contollers";
-
-
-const Routers = Router();
+import jwtSecret from "../middlewares/auth.middelware.js";
+import { deletevideo, getallvideos, getvideobyid, publishvideo, togglepublish, updatedetails } from "../controllers/video.contollers.js";
 
 
-Routers.route("/Publish").post(
+const videoRouters = Router();
+
+
+videoRouters.route("/Publish").post(jwtSecret,
      upload.fields([
           { name: "videofile", maxCount: 1 },
+          { name: "thumbnail", maxCount: 1 },
      ])
 ,publishvideo)
 
-Routers.route("/getallvidoes").get(jwtSecret,getallvideos)
+videoRouters.route("/getallvideos").get(jwtSecret,getallvideos)
 
-Routers.route("/getvideobyid/:id").get(jwtSecret,getvideobyid)
+videoRouters.route("/getvideobyid/:videoid").get(jwtSecret,getvideobyid)
 
-Routers.route("/updatevideo/:id").patch(jwtSecret,updatedetails)
+videoRouters.route("/updatevideo/:videoid").patch(
+    jwtSecret,
+    upload.fields([
+        { name: "thumbnail", maxCount: 1 }
+    ]),
+    updatedetails
+)
 
-Routers.route("/deletevideo/:id").delete(jwtSecret,deletevideo)
+videoRouters.route("/deletevideo/:videoid").delete(jwtSecret,deletevideo)
 
-Routers.route("/togglepublish/:id").post(jwtSecret,togglepublish)
+videoRouters.route("/togglepublish/:videoid").post(jwtSecret,togglepublish)
 
-  export default Routers
+  export default videoRouters

@@ -4,11 +4,11 @@ import mongoose from "mongoose";
 
 const playlist= new mongoose.Schema({
     name:{
-        type:string,
+        type:String,
         required:true,
     },
     description:{
-        type:string,
+        type:String,
         required:true,
     },
    videos: [

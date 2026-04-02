@@ -1,28 +1,28 @@
 import { Router } from "express";
 
-import { upload } from "../middlewares/multer.middelware";
+import { upload } from "../middlewares/multer.middelware.js";
 
-import jwtSecret from "../middlewares/auth.middelware";
-import { addvideostoplaylist, createplaylist, deletePlaylist, getplaylistbyid, getuserplaylist, removevideofromplaylist, updatePlaylist } from "../controllers/playlist.controllers";
-
-
-
- const Routers=Router()
+import jwtSecret from "../middlewares/auth.middelware.js";
+import { addvideostoplaylist, createplaylist, deletePlaylist, getplaylistbyid, getuserplaylist, removevideofromplaylist, updatePlaylist } from "../controllers/playlist.controllers.js";
 
 
- Routers.route("/createplaylist").post(jwtSecret,createplaylist)
 
- Routers.route("/getuserplay/:userid").get(jwtSecret,getuserplaylist)
+ const playlistRouters=Router()
 
-  Routers.route("/getplaylistbyid/:playlistbyid").get(jwtSecret,getplaylistbyid)
 
-   Routers.route("/addvideotoplaylist/video/:videoId/palylist/:playlistId").post(jwtSecret,addvideostoplaylist)
+ playlistRouters.route("/createplaylist").post(jwtSecret,createplaylist)
 
- Routers.route("/removevideofromplaylist/video/:videoId/palylist/:playlistId").patch(jwtSecret,removevideofromplaylist)
+ playlistRouters.route("/getuserplay/:userid").get(jwtSecret,getuserplaylist)
 
-  Routers.route("/deleteplaylist/:playlistId").delete(jwtSecret,deletePlaylist)
+playlistRouters.route("/getplaylistbyid/:playlistbyid").get(jwtSecret,getplaylistbyid)
 
-   Routers.route("/updateplaylist/:playlistId").patch(jwtSecret,updatePlaylist)
+playlistRouters.route("/addvideotoplaylist/video/:videoId/palylist/:playlistId").post(jwtSecret,addvideostoplaylist)
 
-export default Routers
+playlistRouters.route("/removevideofromplaylist/video/:videoId/palylist/:playlistId").patch(jwtSecret,removevideofromplaylist)
+
+playlistRouters.route("/deleteplaylist/:playlistId").delete(jwtSecret,deletePlaylist)
+
+playlistRouters.route("/updateplaylist/:playlistId").patch(jwtSecret,updatePlaylist)
+
+export default playlistRouters
 

@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import ApiResponse from "../utils/Api_Respoonse";
-import { ApiError } from "../utils/ApiErrors";
-import { playlists } from "../models/playlist.models";
-import { asynchandler } from "../utils/asynchandler";
+import ApiResponse from "../utils/Api_Respoonse.js";
+import { ApiError } from "../utils/ApiErrors.js";
+import { playlists } from "../models/playlist.models.js";
+import { asynchandler } from "../utils/asynchandler.js";
 
 
   const createplaylist=asynchandler(async(req,res)=>{

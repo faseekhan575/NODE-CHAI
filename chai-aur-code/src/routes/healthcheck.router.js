@@ -1,16 +1,15 @@
 import { Router } from "express";
 
-import { upload } from "../middlewares/multer.middelware";
+import { upload } from "../middlewares/multer.middelware.js";
 
-import jwtSecret from "../middlewares/auth.middelware";
-import healthcheck from "../controllers/healthcheck.controllers";
-
-
+import jwtSecret from "../middlewares/auth.middelware.js";
+import healthcheck from "../controllers/healthcheck.controllers.js";
 
 
- const Routers=Router()
 
- Routers.route("/heathcheck").get(healthcheck)
 
- export default Routers
- 
+ const hRouters=Router()
+
+ hRouters.route("/heathcheck").get(healthcheck)
+
+ export default hRouters

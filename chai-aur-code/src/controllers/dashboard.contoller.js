@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
-import ApiResponse from "../utils/Api_Respoonse";
-import { ApiError } from "../utils/ApiErrors";
-import { video } from "../models/video.models";
-import { asynchandler } from "../utils/asynchandler";
-import { likes } from "../models/likes.model";
-import { subscription } from "../models/susbription";
+import ApiResponse from "../utils/Api_Respoonse.js";
+import { ApiError } from "../utils/ApiErrors.js";
+import { Video } from "../models/video.models.js";
+import { asynchandler } from "../utils/asynchandler.js";
+import { likes } from "../models/likes.model.js";
+import { subscription } from "../models/susbription.js";
 
 const getallchannalstats = asynchandler(async (req, res) => {
     const userid=req.user._id
             
 
-            const totalstats=await video.aggregate([
+            const totalstats=await Video.aggregate([
                 {
                     $match:{
                         owner:new mongoose.Types.ObjectId(userid)
@@ -26,7 +26,7 @@ const getallchannalstats = asynchandler(async (req, res) => {
                     $lookup:{
                         from:"likes",
                         localField:"owner",
-                       foreignField:"video",
+                       foreignField:"Video",
                        as:"totallikes",
                     }
                 },{
@@ -67,7 +67,7 @@ const getallchannalstats = asynchandler(async (req, res) => {
          const getallvideosuploded=asynchandler(async(req,res)=>{
             const user=req.user._id
 
-            const getallvideos=await video.find({
+            const getallvideos=await Video.find({
                    owner:user
             })
             
