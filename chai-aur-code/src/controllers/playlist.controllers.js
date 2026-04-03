@@ -5,29 +5,41 @@ import { playlists } from "../models/playlist.models.js";
 import { asynchandler } from "../utils/asynchandler.js";
 
 
-  const createplaylist=asynchandler(async(req,res)=>{
-       const {name, description} =req.body
-       const user=req.user._id
+ const createplaylist = asynchandler(async (req, res) => {
+    const { name, description, videos } = req.body;
+    const user = req.user._id;
 
-       if (!(name && description)){
-        return res.status(404).json(new ApiError("plz first enter the name and desription"))
-       }
-       else{
-        const createplaylits=await  playlists.create({
-            name:name,
-            owner:user,
-             description:description,
-        })
+    // Validation
+    if (!name?.trim() || !description?.trim()) {
+        return res.status(400).json(
+            new ApiError(400, "Name and description are required")
+        );
+    }
 
-        if (!createplaylits){
-            return res.status(404).json(new ApiError(404,"playlist not created plz try again"))
-        }
-        else{
-             return res.status(200).json(new ApiResponse(200,createplaylits,"playlist created sucesfully enjoy"))
-        }
+    // Check if videos is sent, it must be an array
+    if (videos && !Array.isArray(videos)) {
+        return res.status(400).json(
+            new ApiError(400, "Videos must be an array of video IDs")
+        );
+    }
 
-       }
-  })
+    const createplaylits = await playlists.create({
+        name: name.trim(),
+        description: description.trim(),
+        owner: user,
+        videos: Array.isArray(videos) ? videos : []
+    });
+
+    if (!createplaylits) {
+        return res.status(500).json(
+            new ApiError(500, "Playlist not created plz try again")
+        );
+    }
+
+    return res.status(201).json(
+        new ApiResponse(201, createplaylits, "Playlist created sucesfully enjoy")
+    );
+});
 
   const getuserplaylist=asynchandler(async(req,res)=>{
     const {userid}=req.params

@@ -1,96 +1,100 @@
+// 
+
 import { comment } from "../models/comments.models.js";
 import { asynchandler } from "../utils/asynchandler.js";
 import ApiResponse from "../utils/Api_Respoonse.js";
 import { ApiError } from "../utils/ApiErrors.js";
 
-const getallvideocomments=asynchandler(async(req,res)=>{
-        const {videoId} = req.params
-    const {page = 1, limit = 10} = req.query
+// FIX: was "usernamen" (typo) - now correctly populates username + avatar + fullname
+// So comment owner is clickable and shows avatar/name in frontend
+const getallvideocomments = asynchandler(async (req, res) => {
+  const { videoId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
 
-     const allcomments=await comment.find({
-         videos:videoId
-       }).skip((page-1)*limit)
-       .limit(limit).populate({
-           path:"owner",
-           select:"usernamen avatar"
-       })
+  const allcomments = await comment
+    .find({ videos: videoId })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit))
+    .populate({
+      path: "owner",
+      select: "username avatar fullname", // FIX: was "usernamen" (typo)
+    });
 
-       if (allcomments.length===0){
-         return res.status(404).json(new ApiError(404,"comments not found"))
-       }
-       else{
-         return res.status(200).json(new ApiResponse(200,allcomments,"all comments has been fetchd sucesully "))
-       }
+  // Return empty array instead of 404 so frontend handles it gracefully
+  return res
+    .status(200)
+    .json(new ApiResponse(200, allcomments, "Comments fetched successfully"));
+});
 
-})
+const addacomment = asynchandler(async (req, res) => {
+  const { content } = req.body;
+  const { videoId } = req.params;
 
+  if (!content || !content.trim()) {
+    return res.status(400).json(new ApiError(400, "Please add a comment first"));
+  }
 
-const addacomment=asynchandler(async(req,res)=>{
-    const comments=req.body
-    const {videoId} = req.params
+  const addcomment = await comment.create({
+    content: content.trim(),
+    videos: videoId,
+    owner: req.user._id,
+  });
 
-    if (!comments || !comments.content){
-         return res.status(404).json(new ApiError(404,"plz add a comemnt first"))
-    }
-    else{
-    const addcomment=await comment.create({
-        content:comments.content,
-        videos:videoId,
-        owner:req.user._id
-    })
+  if (!addcomment) {
+    return res.status(500).json(new ApiError(500, "Server error: failed to post comment"));
+  }
 
-    if (!addcomment){
-        return res.status(404).json(new ApiError(404,"server error failed to uplode a comment"))
-    }
-    else{
-         return res.status(200).json(new ApiResponse(200,addcomment,"comment has been added sucesfully "))
-    }
-}
-})
+  // Populate owner so frontend immediately gets username + avatar
+  const populated = await comment
+    .findById(addcomment._id)
+    .populate({
+      path: "owner",
+      select: "username avatar fullname",
+    });
 
-const updateacomment=asynchandler(async(req,res)=>{
-    const comments=req.body
-    const {commentId} = req.params
+  return res.status(200).json(new ApiResponse(200, populated, "Comment added successfully"));
+});
 
-    if (!comments || !comments.content){
-         return res.status(404).json(new ApiError(404,"plz add a comemnt first"))
-    }
-    else{
-    const updatecomment=await comment.findByIdAndUpdate(
-        commentId,{
-            $set:{
-                 content:comments.content
-            },
-        },{new:true}
-    )
-    if (!updatecomment){
-        return res.status(404).json(new ApiError(404,"server issue failed to update comment"))
-    }
-    else{
-         return res.status(200).json(new ApiResponse(200,updatecomment,"comment has been updated sucesfully "))
-    }
-}
-})
+const updateacomment = asynchandler(async (req, res) => {
+  const { content } = req.body;
+  const { commentId } = req.params;
 
+  if (!content || !content.trim()) {
+    return res.status(400).json(new ApiError(400, "Please provide comment content"));
+  }
 
-const deleteacomment=asynchandler(async(req,res)=>{
-  
-    const {commentId} = req.params
-    
-    const deleteacomment=await comment.findByIdAndDelete(
-        commentId)
-    if (!deleteacomment){
-        return res.status(404).json(new ApiError(404,"server issue failed to update comment"))
-    }
-    else{
-         return res.status(200).json(new ApiResponse(200,deleteacomment,"comment has been deleted sucesfully "))
-    }
+  const updatecomment = await comment.findByIdAndUpdate(
+    commentId,
+    { $set: { content: content.trim() } },
+    { new: true }
+  ).populate({
+    path: "owner",
+    select: "username avatar fullname",
+  });
 
-})
+  if (!updatecomment) {
+    return res.status(404).json(new ApiError(404, "Comment not found"));
+  }
 
-export{
-    addacomment,
-    updateacomment,
-    deleteacomment,
-    getallvideocomments
-}
+  return res.status(200).json(new ApiResponse(200, updatecomment, "Comment updated successfully"));
+});
+
+const deleteacomment = asynchandler(async (req, res) => {
+  const { commentId } = req.params;
+
+  const deleted = await comment.findByIdAndDelete(commentId);
+
+  if (!deleted) {
+    return res.status(404).json(new ApiError(404, "Comment not found"));
+  }
+
+  return res.status(200).json(new ApiResponse(200, deleted, "Comment deleted successfully"));
+});
+
+export {
+  addacomment,
+  updateacomment,
+  deleteacomment,
+  getallvideocomments,
+};

@@ -13,7 +13,7 @@ const subRouters = Router()
 subRouters.route("/toggle/:channalid").post(jwtSecret,togglesubcription)
 
 subRouters.route("/getchannalsubcribers/:channalid").get(getuserchannalsubcribers)
-
-subRouters.route("/getsubcribedchananl/:subscribeID").get(jwtSecret,getsubcribedchannels)
+subRouters.route("/getsubcribedchananl")
+  .get(jwtSecret, getsubcribedchannels)
 
 export default subRouters
