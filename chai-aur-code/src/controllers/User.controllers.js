@@ -39,7 +39,7 @@ const registerUser = asynchandler(async (req, res) => {
   }
 
   const avatarPath = req.files?.avatar?.[0]?.path;
-  const coverPath = req.files?.coverImages?.[0]?.path;
+  const coverPath = req.files?.coverImage?.[0]?.path;
 
   // ✅ FIX 3: Only avatar is required, cover is optional
   if (!avatarPath) {
