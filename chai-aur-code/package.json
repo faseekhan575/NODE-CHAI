@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/indexs.js",
     "build": "echo \"No build step required\"",
-    "start": "node -r dotenv/config --experimental-json-modules src/indexs.js"
+    "start": "mkdir -p public/temp && node -r dotenv/config --experimental-json-modules src/indexs.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.11",
