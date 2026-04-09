@@ -233,49 +233,25 @@ const getallvideos = asynchandler(async (req, res) => {
     {
       $match: {
         isPublished: true,
-        ...(userId && {
-          owner: new mongoose.Types.ObjectId(userId),
-        }),
-        ...(query && {
-          title: { $regex: query, $options: "i" },
-        }),
+        ...(userId && { owner: new mongoose.Types.ObjectId(userId) }),
+        ...(query && { title: { $regex: query, $options: "i" } }),
       },
     },
     {
-      // JOIN owner (User) to get avatar, username, fullname
       $lookup: {
         from: "users",
         localField: "owner",
         foreignField: "_id",
         as: "owner",
         pipeline: [
-          {
-            $project: {
-              _id: 1,
-              username: 1,
-              fullname: 1,
-              avatar: 1,
-            },
-          },
+          { $project: { _id: 1, username: 1, fullname: 1, avatar: 1 } },
         ],
       },
     },
-    {
-      $addFields: {
-        owner: { $first: "$owner" },
-      },
-    },
-    {
-      $sort: {
-        [sortBy]: sortorder,
-      },
-    },
-    {
-      $skip: (pageNumber - 1) * pagelimit,
-    },
-    {
-      $limit: pagelimit,
-    },
+    { $addFields: { owner: { $first: "$owner" } } },
+    { $sort: { [sortBy]: sortorder } },
+    { $skip: (pageNumber - 1) * pagelimit },
+    { $limit: pagelimit },
   ]);
 
   if (videos.length === 0) {
@@ -297,8 +273,9 @@ const publishvideo = asynchandler(async (req, res) => {
       return res.status(400).json(new ApiError(400, "Please enter all required fields"));
     }
 
-    const videofiles = req.files?.videofile?.[0]?.path;
-    const thumbnailfiles = req.files?.thumbnail?.[0]?.path;
+    // ✅ FIXED: .buffer instead of .path
+    const videofiles = req.files?.videofile?.[0]?.buffer;
+    const thumbnailfiles = req.files?.thumbnail?.[0]?.buffer;
 
     if (!videofiles || !thumbnailfiles) {
       return res.status(400).json(new ApiError(400, "Please upload both video and thumbnail files"));
@@ -335,11 +312,7 @@ const getvideobyid = asynchandler(async (req, res) => {
   const userid = req.user?._id ?? null;
 
   const video = await Video.aggregate([
-    {
-      $match: {
-        _id: new mongoose.Types.ObjectId(videoid),
-      },
-    },
+    { $match: { _id: new mongoose.Types.ObjectId(videoid) } },
     {
       $lookup: {
         from: "users",
@@ -347,22 +320,15 @@ const getvideobyid = asynchandler(async (req, res) => {
         foreignField: "_id",
         as: "owner",
         pipeline: [
-          {
-            $project: {
-              _id: 1,
-              username: 1,
-              fullname: 1,
-              avatar: 1,
-            },
-          },
+          { $project: { _id: 1, username: 1, fullname: 1, avatar: 1 } },
         ],
       },
     },
     {
       $lookup: {
-        from: "likes",          // must match your MongoDB collection name
+        from: "likes",
         localField: "_id",
-        foreignField: "videos", // field name in likes model
+        foreignField: "videos",
         as: "likeDocs",
       },
     },
@@ -382,10 +348,7 @@ const getvideobyid = asynchandler(async (req, res) => {
                       input: "$likeDocs",
                       as: "l",
                       cond: {
-                        $eq: [
-                          "$$l.likeby",
-                          new mongoose.Types.ObjectId(userid),
-                        ],
+                        $eq: ["$$l.likeby", new mongoose.Types.ObjectId(userid)],
                       },
                     },
                   },
@@ -397,18 +360,13 @@ const getvideobyid = asynchandler(async (req, res) => {
         },
       },
     },
-    {
-      $project: {
-        likeDocs: 0, // remove raw like docs from response
-      },
-    },
+    { $project: { likeDocs: 0 } },
   ]);
 
   if (!video || video.length === 0) {
     return res.status(404).json(new ApiError(404, "Video not found"));
   }
 
-  // Increment views
   await Video.findByIdAndUpdate(videoid, { $inc: { views: 1 } });
 
   return res.status(200).json(new ApiResponse(200, video[0], "Video fetched"));
@@ -422,7 +380,8 @@ const updatedetails = asynchandler(async (req, res) => {
     return res.status(400).json(new ApiError(400, "Please enter required fields"));
   }
 
-  const thumnailfile = req.files?.thumbnail?.[0]?.path;
+  // ✅ FIXED: .buffer instead of .path
+  const thumnailfile = req.files?.thumbnail?.[0]?.buffer;
 
   const updates = {};
   if (title) updates.title = title;
