@@ -214,7 +214,7 @@ import ApiResponse from "../utils/Api_Respoonse.js";
 import { ApiError } from "../utils/ApiErrors.js";
 import { asynchandler } from "../utils/asynchandler.js";
 import mongoose from "mongoose";
-
+import { sendPushToUser } from "../utils/sendPushNotification.js";
 const getallvideos = asynchandler(async (req, res) => {
   const {
     page = 1,
@@ -297,13 +297,40 @@ const publishvideo = asynchandler(async (req, res) => {
       duration: videuplode.duration,
     });
 
-    if (!publish) {
-      return res.status(500).json(new ApiError(500, "Error while publishing the video"));
-    }
+   if (publish) {
+  // Notify all subscribers of this channel about the new video
+  try {
+    const { subscription } = await import("../models/susbription.js");
+    const allSubs = await subscription
+      .find({ channel: user })
+      .select("subscriber");
 
-    return res.status(200).json(new ApiResponse(200, publish, "Video uploaded successfully"));
-  } catch (error) {
-    return res.status(500).json(new ApiError(500, "Server error: " + error.message));
+    const uploader = await (await import("../models/user.models.js")).default
+      .findById(user)
+      .select("username fullname");
+
+    const notifPayload = {
+      title: `${uploader?.fullname || uploader?.username} uploaded a new video 🎬`,
+      body: title,
+      icon: thumbnailuplode.url,
+      url: `/watch/${publish._id}`,
+    };
+
+    await Promise.all(
+      allSubs.map((s) =>
+        sendPushToUser(s.subscriber, notifPayload).catch(() => {})
+      )
+    );
+  } catch (e) {
+    console.error("Push (upload) error:", e.message);
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, publish, "Video uploaded successfully"));
+}
+} catch (error) {
+    return res.status(500).json(new ApiError(500, "Server error", error.message));
   }
 });
 

@@ -39,6 +39,7 @@ app.use(cookieParser());
 app.use(express.static("public"));
 
 // ==================== Routers ====================
+import pushRouter from './routes/push.router.js';
 import userRouter from './routes/user.router.js';
 import videoRouter from './routes/video.router.js';
 import playlistRouter from './routes/playlist.router.js';
@@ -49,6 +50,7 @@ import tweetRouter from './routes/tweet.router.js';
 import dashRouter from './routes/dashboard.router.js';
 import healthRouter from './routes/healthcheck.router.js';
 
+
 app.use("/api/v1/user", userRouter);
 app.use("/api/v2/video", videoRouter);
 app.use("/api/v3/playlist", playlistRouter);
@@ -58,6 +60,7 @@ app.use("/api/v6/like", likeRouter);
 app.use("/api/v7/dashboard", dashRouter);
 app.use("/api/v8/healthcheck", healthRouter);
 app.use("/api/v9/subscription", subRouter);
+app.use("/api/v10/push", pushRouter);
 // ================================================
 
 // Error handling middleware (optional but recommended)
