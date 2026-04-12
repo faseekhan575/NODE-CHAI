@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import session from 'express-session';
+import passport from './utils/passport.js';
 
 // Load environment variables from .env (only locally)
 dotenv.config();
@@ -35,6 +37,18 @@ app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(cookieParser());
 
+// Session (required for passport)
+app.use(session({
+  secret: process.env.ACCESS_TOKEN,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
+
+// Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Serve static files
 app.use(express.static("public"));
 
@@ -49,6 +63,7 @@ import subRouter from './routes/subcription.router.js';
 import tweetRouter from './routes/tweet.router.js';
 import dashRouter from './routes/dashboard.router.js';
 import healthRouter from './routes/healthcheck.router.js';
+import authRouter from './routes/auth.router.js';
 
 
 app.use("/api/v1/user", userRouter);
@@ -61,6 +76,7 @@ app.use("/api/v7/dashboard", dashRouter);
 app.use("/api/v8/healthcheck", healthRouter);
 app.use("/api/v9/subscription", subRouter);
 app.use("/api/v10/push", pushRouter);
+app.use("/auth", authRouter);
 // ================================================
 
 // Error handling middleware (optional but recommended)

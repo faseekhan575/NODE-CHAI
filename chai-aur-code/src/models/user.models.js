@@ -25,16 +25,24 @@ const UserSchema= new mongoose.Schema({
          },
          avatar:{
               type: String,
-            required:true,
+           default: ""
          },
          coverImages:{
           type: String
   //cloudnery url
 
          },
+         googleId: {
+   type: String,
+   default: null
+},
+isGoogleUser: {
+   type: Boolean,
+   default: false
+},
          passward:{
             type:String,
-            required:[true,"plz enter you password first"]
+            default: null 
          },
         tokens: {
     type: [String],
@@ -54,9 +62,7 @@ const UserSchema= new mongoose.Schema({
 })
 
 UserSchema.pre("save", async function () {
-    // Only hash the password if it’s new or modified
-    if (!this.isModified("passward")) return;
-
+    if (!this.isModified("passward") || !this.passward) return;
     this.passward = await bcrypt.hash(this.passward, 10);
 });
 
