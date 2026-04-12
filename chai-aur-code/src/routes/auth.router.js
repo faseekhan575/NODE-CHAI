@@ -7,16 +7,16 @@ const router = express.Router();
 // Cookie options
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: true,  // always true, not conditional
   sameSite: 'None',
-  maxAge: 100 * 24 * 60 * 60 * 1000 // 100 days
+  maxAge: 100 * 24 * 60 * 60 * 1000
 };
 
 const refreshCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: true,  // always true
   sameSite: 'None',
-  maxAge: 100 * 24 * 60 * 60 * 1000 // 100 days
+  maxAge: 100 * 24 * 60 * 60 * 1000
 };
 
 // Step 1: Redirect to Google
