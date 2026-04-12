@@ -11,11 +11,15 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Check if user already exists
+        // Check if user already exists by googleId
         let user = await User.findOne({ googleId: profile.id });
 
         if (user) {
-          // User exists, just return it
+          // ✅ Always ensure username is lowercase on every login
+          if (user.username !== user.username.toLowerCase()) {
+            user.username = user.username.toLowerCase();
+            await user.save();
+          }
           return done(null, user);
         }
 
@@ -25,19 +29,20 @@ passport.use(
         });
 
         if (existingUser) {
-          // Link google to existing account
+          // Link google to existing account + fix username to lowercase
           existingUser.googleId = profile.id;
           existingUser.isGoogleUser = true;
+          existingUser.username = existingUser.username.toLowerCase(); // ✅ fix case
           await existingUser.save();
           return done(null, existingUser);
         }
 
-        // Create brand new user
+        // Create brand new user — always lowercase username
         const newUser = await User.create({
           googleId: profile.id,
           email: profile.emails[0].value,
           fullname: profile.displayName,
-          username: profile.displayName.toLowerCase().replace(/\s+/g, "_") + "_" + Date.now(),
+          username: profile.displayName.toLowerCase().replace(/\s+/g, "_") + "_" + Date.now(), // ✅ lowercase
           avatar: profile.photos[0].value,
           isGoogleUser: true,
         });
@@ -49,9 +54,11 @@ passport.use(
     }
   )
 );
-passport.serializeUser((user, done) => done(null, user._id))
+
+passport.serializeUser((user, done) => done(null, user._id));
 passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id)
-  done(null, user)
-})
+  const user = await User.findById(id);
+  done(null, user);
+});
+
 export default passport;

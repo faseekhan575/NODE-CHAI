@@ -758,7 +758,7 @@ export const getuserchannalprofile = asynchandler(async (req, res) => {
   }
 
   const channel = await User.aggregate([
-    { $match: { username: username?.toLowerCase() } },
+   { $match: { username: { $regex: new RegExp(`^${username}$`, 'i') } } },
     {
       $lookup: {
         from: "subscriptions",
