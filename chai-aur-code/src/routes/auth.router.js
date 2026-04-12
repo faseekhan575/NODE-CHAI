@@ -1,22 +1,14 @@
 import express from 'express';
 import passport from '../utils/passport.js';
 import jwt from 'jsonwebtoken';
+import User from '../models/user.models.js';
 
 const router = express.Router();
 
-// Cookie options
-const cookieOptions = {
+const options = {
   httpOnly: true,
-  secure: true,  // always true, not conditional
-  sameSite: 'None',
-  maxAge: 100 * 24 * 60 * 60 * 1000
-};
-
-const refreshCookieOptions = {
-  httpOnly: true,
-  secure: true,  // always true
-  sameSite: 'None',
-  maxAge: 100 * 24 * 60 * 60 * 1000
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
 
 // Step 1: Redirect to Google
@@ -48,17 +40,19 @@ router.get('/google/callback',
         { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
       );
 
-      // Clear any old cookies first
-      res.clearCookie('accesstoken');
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
-      res.clearCookie('refreshtoken');
+      // Save refreshToken to tokens array just like normal login
+      user.tokens = user.tokens ? [...user.tokens, refreshToken] : [refreshToken]
+      await user.save()
 
-      // Set new cookies for Google user
-      res.cookie('accesstoken', accessToken, cookieOptions);
-      res.cookie('refreshtoken', refreshToken, refreshCookieOptions);
+      // Clear old cookies
+      res.clearCookie('accesstoken')
+      res.clearCookie('refreshtoken')
 
-      res.redirect('https://faseehvision.netlify.app/google-callback');
+      // Set new cookies exactly like normal login
+      res
+        .cookie("accesstoken", accessToken, options)
+        .cookie("refreshtoken", refreshToken, options)
+        .redirect('https://faseehvision.netlify.app/google-callback')
 
     } catch (error) {
       console.error("Google callback error:", error);
